@@ -6,21 +6,13 @@
 
 (defn handle-click [idx img]
  (fn [evt] (.log js/console (str "-" idx))))
-           
+
 (defn render-radios [graph] 
  (let [fill (graphics/SolidFill. "red")
-       stroke (graphics/Stroke. 5 "green")
-       images (doall
-               (map (fn [[x y] idx]
-                     {:image (.drawCircle graph x y 30 stroke fill)
-                      :index idx})
-                (js->clj js/anchors) (iterate inc 1)))]
-       (doseq [{image :image index :index} images]
-        (events/listen 
-         image 
-         #js [goog.events.EventType.CLICK] 
-         (handle-click index image)))
-       images))
+       stroke (graphics/Stroke. 5 "green")]
+      (doseq [[[x y] idx] (map (js->clj js/anchors) (iterate inc 1))]
+       (doto (.drawImage graph x y 30 stroke fill)
+        #(events/listen % (.-CLICK events/EventType) (handle-click idx %))))))
 
 (defn handle-start [e]
  (.log js/console "start button"))
