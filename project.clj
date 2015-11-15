@@ -15,8 +15,10 @@
       :main {
         :source-paths ["src/cljs"]
         :compiler {:output-to "resources/public/js/cljs.js"
+                   :output-dir "resources/public/js/out"
                    :optimizations :advanced
-                   :pretty-print true}
+                   :pretty-print true
+                   :source-map "resources/public/js/cljs.js.map"}
         :jar true}}}
   :main cljstest.server
   :ring {:handler cljstest.server/main})

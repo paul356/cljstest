@@ -1,34 +1,52 @@
-(ns hello-clojurescript
+(ns cljstest.client
   (:require [goog.events :as events]
             [goog.dom :as dom]
             [goog.graphics :as graphics])
   (:import  [goog.ui CustomButton]))
 
-(defn handle-click [idx img]
- (fn [evt] (.log js/console (str "-" idx))))
+(defn get-anchors [] (js->clj js/anchors))
+(defn get-onoffs [idx] (aget js/onoffs idx))
 
-(defn render-radios [graph] 
- (let [fill (graphics/SolidFill. "red")
-       stroke (graphics/Stroke. 5 "green")]
-      (doseq [[[x y] idx] (map (js->clj js/anchors) (iterate inc 1))]
-       (doto (.drawImage graph x y 30 stroke fill)
-        #(events/listen % (.-CLICK events/EventType) (handle-click idx %))))))
+(defn flip-onoffs [idx]
+ (aset js/onoffs idx (bit-xor 1 (aget js/onoffs idx))))
 
-(defn handle-start [e]
- (.log js/console "start button"))
-(defn handle-reset [e]
- (.log js/console "reset button"))
+(defn handle-click [graph x y idx img]
+ (fn [evt] 
+  (flip-onoffs idx)
+  (.dispose img)
+  (draw-image graph x y idx)
+  (.log js/console (str "-" idx))))
+
+(defn draw-image [graph x y idx]
+ (let [image (if (pos? (get-onoffs idx))
+              (.drawImage graph x y 66 64 "static/on.jpg")
+              (.drawImage graph x y 66 64 "static/off.jpg"))]
+      (events/listen image (.-CLICK events/EventType) (handle-click graph x y idx image))))
+
+(defn render-radios [graph]
+ (doseq [[[x y] idx] (map list (get-anchors) (iterate inc 0))]
+  (draw-image graph x y idx)))
+
+(defn handle-open [e]
+ (.log js/console "open button"))
+(defn handle-close [e]
+ (.log js/console "close button"))
+(defn handle-openall [e]
+ (.log js/console "openall button"))
 
 (defn render-buttons []
  (doto (CustomButton. "开始")
   (.render (dom/getElement "start-reset"))
-  (events/listen #js [goog.ui.Component.EventType.ACTION] handle-start))
- (doto (CustomButton. "重置")
+  (events/listen #js [goog.ui.Component.EventType.ACTION] handle-open))
+ (doto (CustomButton. "关闭")
   (.render (dom/getElement "start-reset"))
-  (events/listen #js [goog.ui.Component.EventType.ACTION] handle-reset)))
+  (events/listen #js [goog.ui.Component.EventType.ACTION] handle-close))
+ (doto (CustomButton. "全部打开")
+  (.render (dom/getElement "start-reset"))
+  (events/listen #js [goog.ui.Component.EventType.ACTION] handle-openall)))
 
 (defn main []
- (let [graph (graphics/createGraphics "100%" "100%" 1000 600)
+ (let [graph (graphics/createGraphics "100%" "100%" 600 400)
        div-canvas (dom/getElement "canvas")] 
   (render-radios graph)
   (.render graph div-canvas)

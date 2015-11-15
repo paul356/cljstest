@@ -7,16 +7,25 @@
             [clojure.java.io :as io])
   (:gen-class))
 
-(def script-str (str 
-                 "var anchors = [" 
-                 (reduce
-                  str
-                  (map #(format "[%d,%d]," (:x %) (:y %)) [{:x 10 :y 10} {:x 50 :y 50} {:x 90 :y 90} {:x 130 :y 130}]))
-                 "];"))
+(defn anchors-str [] (str 
+                     "var anchors = [" 
+                     (reduce
+                      str
+                      (map #(format "[%d,%d]," (:x %) (:y %)) [{:x 10 :y 10} {:x 250 :y 250} {:x 390 :y 10} {:x 530 :y 230}]))
+                     "];"))
+
+(defn query-states [] [0 0 0 1])
+
+(defn states-str [] (str
+                     "var onoffs = ["
+                     (reduce
+                      str
+                      (map #(format "%d," %) (query-states)))
+                     "];"))
 
 (defn replace-tag [tag]
  (if (= tag "<replace/>")
-  (str "<script>" script-str "</script>")
+  (str "<script>" (anchors-str) (states-str) "</script>")
   tag))
 
 (def front-page
