@@ -5,6 +5,7 @@
             [compojure.route :as route]
             ;[compojure.response :refer [render]]
             [clojure.java.io :as io])
+  (:import  [jssc SerialPort SerialPortList])
   (:gen-class))
 
 (defn anchors-str [] (str 
@@ -14,7 +15,32 @@
                       (map #(format "[%d,%d]," (:x %) (:y %)) [{:x 10 :y 10} {:x 250 :y 250} {:x 390 :y 10} {:x 530 :y 230}]))
                      "];"))
 
-(defn query-states [] [0 0 0 1])
+(defonce serial-conn 
+ (let [ports (. SerialPortList getPortNames)
+       myport "/dev/tty.usbmodem1411"]
+  (if (and (pos? (alength ports)) (contains? (set ports) myport))
+;   (doto (SerialPort. "/dev/tty.usbserial-A50285BI")
+   (doto (SerialPort. myport)
+    (.openPort)
+    (.setParams 9600 8 1 0)
+    ((fn [_] (Thread/sleep 1000))))
+   nil)))
+
+(defn set-port [idx val]
+ (.writeBytes serial-conn (byte-array [(byte \s) (byte idx) (byte val)]))
+ (.readBytes serial-conn 1))
+
+(defn query-port [idx] 
+ (.writeBytes serial-conn (byte-array [(byte \g) (byte idx)]))
+ (aget (.readBytes serial-conn 1) 0))
+
+(defn close-conn []
+ (.closePort serial-conn))
+
+(defn query-states []
+ (if serial-conn
+  (doall (map query-port [0 1 2 3])) 
+  (do (println "serial-conn is nil") [0 0 0 0])))
 
 (defn states-str [] (str
                      "var onoffs = ["
