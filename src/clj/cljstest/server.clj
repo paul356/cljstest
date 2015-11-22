@@ -1,19 +1,13 @@
 (ns cljstest.server
   (:require [qbits.jet.server :refer [run-jetty]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
+            [ring.middleware.params :refer [wrap-params]]
             [compojure.core :refer :all]
             [compojure.route :as route]
             ;[compojure.response :refer [render]]
             [clojure.java.io :as io])
   (:import  [jssc SerialPort SerialPortList])
   (:gen-class))
-
-(defn anchors-str [] (str 
-                     "var anchors = [" 
-                     (reduce
-                      str
-                      (map #(format "[%d,%d]," (:x %) (:y %)) [{:x 10 :y 10} {:x 250 :y 250} {:x 390 :y 10} {:x 530 :y 230}]))
-                     "];"))
 
 (defonce serial-conn 
  (let [ports (. SerialPortList getPortNames)
@@ -28,7 +22,7 @@
 
 (defn set-port [idx val]
  (.writeBytes serial-conn (byte-array [(byte \s) (byte idx) (byte val)]))
- (.readBytes serial-conn 1))
+ (aget (.readBytes serial-conn 1) 0))
 
 (defn query-port [idx] 
  (.writeBytes serial-conn (byte-array [(byte \g) (byte idx)]))
@@ -36,6 +30,19 @@
 
 (defn close-conn []
  (.closePort serial-conn))
+
+(def anchors-str (str 
+                  "var anchors = [" 
+                  (reduce
+                   str
+                   (map #(format "[%d,%d,%d]," (:x %) (:y %) (:group %)) 
+                    [{:x 10  :y 10  :group 1} 
+                     {:x 250 :y 250 :group 1} 
+                     {:x 390 :y 10  :group 2} 
+                     {:x 530 :y 230 :group 2}]))
+                  "];"))
+
+(def images-str "var images = [null, null, null, null];")
 
 (defn query-states []
  (if serial-conn
@@ -51,19 +58,29 @@
 
 (defn replace-tag [tag]
  (if (= tag "<replace/>")
-  (str "<script>" (anchors-str) (states-str) "</script>")
+  (str "<script>" anchors-str (states-str) images-str "</script>")
   tag))
 
-(def front-page
- (let [templ (io/reader "resources/index.html")]
-  (reduce str (map replace-tag (line-seq templ)))))
+(defonce front-page-templ
+ (line-seq (io/reader "resources/index.html")))
+
+(defn get-front-page []
+ (reduce str (map replace-tag front-page-templ)))
 
 (defroutes app
- (GET "/" [] front-page)
+ (GET "/" [] (get-front-page))
+ (GET "/port/set/:index" [index :as req] 
+  (let [params (:query-params req)]
+   (if (contains? params "val")
+    (str (set-port 
+      (Integer. index)
+      (Integer. (get params "val"))))
+    "need ?val=1/0")))
+ (GET "/port/get/:index" [index] 
+  (str (query-port (Integer. index))))
  (route/resources "/static")
  (route/not-found "<h1>Page Not Found</h1>"))
 
 (defn -main [& args]
- (let [app (wrap-defaults app site-defaults)]
+ (let [app (wrap-params (wrap-defaults app site-defaults))]
   (run-jetty {:ring-handler app :port 3000})))
-

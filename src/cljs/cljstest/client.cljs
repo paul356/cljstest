@@ -2,30 +2,60 @@
   (:require [goog.events :as events]
             [goog.dom :as dom]
             [goog.graphics :as graphics])
-  (:import  [goog.ui CustomButton]))
+  (:import  [goog.ui CustomButton]
+            [goog.net XmlHttp]))
+
+(declare draw-image)
+
+(defn get-port [idx]
+ (let [req (XmlHttp.)]
+  (.open req "GET" (str "/port/get/" idx))
+  (.send req)
+  (.-responseText req)))
+
+(defn set-port [idx val]
+ (let [req (XmlHttp.)]
+  (.open req "GET" (str "/port/set/" idx "?val=" val))
+  (.send req)
+  (.-statusText req)))
 
 (defn get-anchors [] (js->clj js/anchors))
+
 (defn get-onoffs [idx] (aget js/onoffs idx))
-
 (defn flip-onoffs [idx]
- (aset js/onoffs idx (bit-xor 1 (aget js/onoffs idx))))
+ (.log js/console (str "flip switch-" idx))
+ (aset js/onoffs idx (bit-xor 1 (aget js/onoffs idx)))
+ (set-port idx (aget js/onoffs idx)))
 
-(defn handle-click [graph x y idx img]
+(defn get-image [idx] (aget js/images idx))
+(defn save-image [idx img] (aset js/images idx img))
+
+(defn handle-click [graph x y idx anchor-group]
  (fn [evt] 
+  (.log js/console (str "click swtich-" idx))
   (flip-onoffs idx)
-  (.dispose img)
-  (draw-image graph x y idx)
-  (.log js/console (str "-" idx))))
+  (.dispose (get-image idx))
+  (draw-image graph x y idx anchor-group)
+  (if (pos? (get-onoffs idx))
+   (doseq [[x y _ index] anchor-group 
+           :when (and
+                  (not= idx index) 
+                  (pos? (get-onoffs index)))]
+    (flip-onoffs index)
+    (.dispose (get-image index))
+    (draw-image graph x y index anchor-group)))))
 
-(defn draw-image [graph x y idx]
+(defn draw-image [graph x y idx anchor-group]
  (let [image (if (pos? (get-onoffs idx))
               (.drawImage graph x y 66 64 "static/on.jpg")
               (.drawImage graph x y 66 64 "static/off.jpg"))]
-      (events/listen image (.-CLICK events/EventType) (handle-click graph x y idx image))))
+  (save-image idx image)
+  (events/listen image (.-CLICK events/EventType) (handle-click graph x y idx anchor-group))))
 
-(defn render-radios [graph]
- (doseq [[[x y] idx] (map list (get-anchors) (iterate inc 0))]
-  (draw-image graph x y idx)))
+(defn render-switchs [graph]
+ (let [anchors (map conj (get-anchors) (iterate inc 0))]
+  (doseq [[x y group idx] anchors]
+   (draw-image graph x y idx (filter #(= group (nth % 2)) anchors)))))
 
 (defn handle-open [e]
  (.log js/console "open button"))
@@ -48,7 +78,7 @@
 (defn main []
  (let [graph (graphics/createGraphics "100%" "100%" 600 400)
        div-canvas (dom/getElement "canvas")] 
-  (render-radios graph)
+  (render-switchs graph)
   (.render graph div-canvas)
   (render-buttons)))
 
