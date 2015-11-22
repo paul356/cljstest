@@ -57,26 +57,26 @@
   (doseq [[x y group idx] anchors]
    (draw-image graph x y idx (filter #(= group (nth % 2)) anchors)))))
 
-(defn handle-open [e]
- (.log js/console "open button"))
-(defn handle-close [e]
- (.log js/console "close button"))
-(defn handle-openall [e]
- (.log js/console "openall button"))
+(defn handle-start [e]
+ (.log js/console "start button")
+ (set-port (alength js/anchors) 1))
+(defn handle-stop [e]
+ (.log js/console "stop button")
+ (set-port (alength js/anchors) 0))
 
 (defn render-buttons []
  (doto (CustomButton. "开始")
-  (.render (dom/getElement "start-reset"))
-  (events/listen #js [goog.ui.Component.EventType.ACTION] handle-open))
- (doto (CustomButton. "关闭")
-  (.render (dom/getElement "start-reset"))
-  (events/listen #js [goog.ui.Component.EventType.ACTION] handle-close))
- (doto (CustomButton. "全部打开")
-  (.render (dom/getElement "start-reset"))
-  (events/listen #js [goog.ui.Component.EventType.ACTION] handle-openall)))
+  (.render (dom/getElement "start-stop"))
+  (events/listen #js [goog.ui.Component.EventType.ACTION] handle-start))
+ (doto (CustomButton. "停止")
+  (.render (dom/getElement "start-stop"))
+  (events/listen #js [goog.ui.Component.EventType.ACTION] handle-stop)))
+; (doto (CustomButton. "全部打开")
+;  (.render (dom/getElement "start-reset"))
+;  (events/listen #js [goog.ui.Component.EventType.ACTION] handle-openall)))
 
 (defn main []
- (let [graph (graphics/createGraphics "100%" "100%" 600 400)
+ (let [graph (graphics/createGraphics 600 400)
        div-canvas (dom/getElement "canvas")] 
   (render-switchs graph)
   (.render graph div-canvas)
