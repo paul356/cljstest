@@ -4,7 +4,7 @@
             [ring.middleware.params :refer [wrap-params]]
             [compojure.core :refer :all]
             [compojure.route :as route]
-            ;[compojure.response :refer [render]]
+            [compojure.response :refer [render]]
             [clojure.java.io :as io])
   (:import  [jssc SerialPort SerialPortList])
   (:gen-class))

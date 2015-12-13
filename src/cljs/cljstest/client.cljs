@@ -75,11 +75,35 @@
 ;  (.render (dom/getElement "start-reset"))
 ;  (events/listen #js [goog.ui.Component.EventType.ACTION] handle-openall)))
 
-(defn main []
- (let [graph (graphics/createGraphics 600 400)
-       div-canvas (dom/getElement "canvas")] 
-  (render-switchs graph)
-  (.render graph div-canvas)
-  (render-buttons)))
+(declare main)
 
-(set! (.-onload js/window) main)
+(defn click-enter [graph images]
+ (fn [_] 
+  (dorun (map #(.dispose %) images))
+  (main graph)))
+
+(defn click-about [_]
+ (js/alert "no about now"))
+
+(defn render-images [graph]
+ [(.drawImage graph 0 0 1443 771 "static/entry_page.png")
+  (.drawImage graph 630 548 184 109 "static/entry_icon.png")
+  (.drawImage graph 1165 669 277 102 "static/about.png")])
+
+(defn render-front-buttons [graph images]
+ (events/listen (images 1) (.-CLICK events/EventType) (click-enter graph images))
+ (events/listen (images 2) (.-CLICK events/EventType) click-about))
+
+(defn front []
+ (let [graph (graphics/createGraphics 1443 771)
+       div-canvas (dom/getElement "canvas")
+       images (render-images graph)]
+  (render-front-buttons graph images)
+  (.render graph div-canvas)))
+
+(defn main [graph]
+ (.drawImage graph 0 0 1440 770 "static/background.png")
+ (render-switchs graph)
+ (render-buttons))
+
+(set! (.-onload js/window) front)

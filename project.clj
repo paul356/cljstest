@@ -9,18 +9,17 @@
                  [org.scream3r/jssc "2.8.0"]]
   :plugins [[lein-cljsbuild "1.0.2"]
             [lein-ring "0.8.10"]]
-  :hooks [leiningen.cljsbuild]
   :source-paths ["src/clj"]
   :cljsbuild { 
-    :builds {
-      :main {
-        :source-paths ["src/cljs"]
+    :builds [
+      { :source-paths ["src/cljs"]
         :compiler {:output-to "resources/public/js/cljs.js"
                    :output-dir "resources/public/js/out"
                    :optimizations :advanced
                    :pretty-print true
                    :source-map "resources/public/js/cljs.js.map"}
-        :jar true}}}
+        :jar true } 
+    ]}
   :main cljstest.server
   :ring {:handler cljstest.server/main})
 
