@@ -78,7 +78,7 @@
     "need ?val=1/0")))
  (GET "/port/get/:index" [index] 
   (str (query-port (Integer. index))))
- (route/resources "/static")
+ (route/resources "/")
  (route/not-found "<h1>Page Not Found</h1>"))
 
 (defn -main [& args]
