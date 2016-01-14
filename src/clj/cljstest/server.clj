@@ -2,7 +2,7 @@
   (:require [qbits.jet.server :refer [run-jetty]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.params :refer [wrap-params]]
-            [ring.util.response :refer [redirect]]
+            [ring.util.response :refer [redirect content-type response]]
             [compojure.core :refer :all]
             [compojure.route :as route]
             [clojure.java.io :as io])
@@ -64,7 +64,7 @@
 
 (defroutes app
  (GET "/" [] (redirect "/index.html"))
- (GET "/js/data.js" [] (get-data))
+ (GET "/js/data.js" [] (content-type (response (get-data)) "application/javascript"))
  (GET "/port/set/:index" [index :as req] 
   (let [params (:query-params req)]
    (if (contains? params "val")
