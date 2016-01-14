@@ -2,9 +2,9 @@
   (:require [qbits.jet.server :refer [run-jetty]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.params :refer [wrap-params]]
+            [ring.util.response :refer [redirect]]
             [compojure.core :refer :all]
             [compojure.route :as route]
-            [compojure.response :refer [render]]
             [clojure.java.io :as io])
   (:import  [jssc SerialPort SerialPortList])
   (:gen-class))
@@ -56,19 +56,15 @@
                       (map #(format "%d," %) (query-states)))
                      "];"))
 
-(defn replace-tag [tag]
- (if (= tag "<replace/>")
-  (str "<script>" anchors-str (states-str) images-str "</script>")
-  tag))
+(defn get-data []
+ (str anchors-str (states-str) images-str))
 
-(defonce front-page-templ
- (line-seq (io/reader "resources/index.html")))
-
-(defn get-front-page []
- (reduce str (map replace-tag front-page-templ)))
+;(defn get-front-page []
+; (reduce str (map replace-tag front-page-templ)))
 
 (defroutes app
- (GET "/" [] (get-front-page))
+ (GET "/" [] (redirect "/index.html"))
+ (GET "/js/data.js" [] (get-data))
  (GET "/port/set/:index" [index :as req] 
   (let [params (:query-params req)]
    (if (contains? params "val")

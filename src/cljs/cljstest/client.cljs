@@ -47,8 +47,8 @@
 
 (defn draw-image [graph x y idx anchor-group]
  (let [image (if (pos? (get-onoffs idx))
-              (.drawImage graph x y 66 64 "static/on.jpg")
-              (.drawImage graph x y 66 64 "static/off.jpg"))]
+              (.drawImage graph x y 66 64 "on.jpg")
+              (.drawImage graph x y 66 64 "off.jpg"))]
   (save-image idx image)
   (events/listen image (.-CLICK events/EventType) (handle-click graph x y idx anchor-group))))
 
@@ -86,9 +86,9 @@
  (js/alert "no about now"))
 
 (defn render-images [graph]
- [(.drawImage graph 0 0 1443 771 "static/entry_page.png")
-  (.drawImage graph 630 548 184 109 "static/entry_icon.png")
-  (.drawImage graph 1165 669 277 102 "static/about.png")])
+ [(.drawImage graph 0 0 1443 771 "entry_page.png")
+  (.drawImage graph 630 548 184 109 "entry_icon.png")
+  (.drawImage graph 1165 669 277 102 "about.png")])
 
 (defn render-front-buttons [graph images]
  (events/listen (images 1) (.-CLICK events/EventType) (click-enter graph images))
@@ -102,7 +102,7 @@
   (.render graph div-canvas)))
 
 (defn main [graph]
- (.drawImage graph 0 0 1440 770 "static/background.png")
+ (.drawImage graph 0 0 1440 770 "background.png")
  (render-switchs graph)
  (render-buttons))
 
