@@ -11,7 +11,7 @@
 
 (defonce serial-conn 
  (let [ports (. SerialPortList getPortNames)
-       myport "/dev/tty.usbmodem1411"]
+       myport "/dev/tty.usbmodem1421"]
   (if (and (pos? (alength ports)) (contains? (set ports) myport))
 ;   (doto (SerialPort. "/dev/tty.usbserial-A50285BI")
    (doto (SerialPort. myport)

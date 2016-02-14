@@ -1,7 +1,8 @@
-Summary
+#cljstest
 
-An experimental clojurescript and Arduino project which consists of a simple backend and frontend.
+_Keywords: Clojure ClojureScript Arduino_
 
-The backend is written in plain clojure which uses ring, compojure, and jssc to service web requests. The backend provides intefaces to switch some "PORT"s. The "PORT" is a delegate of an Arduino digital pin. You can set these Arduino pins to high and low voltage though /port/set/<index>?val=1/0 and get pin status by /port/get/<index>. Beside these interface the backend serve a simple html page which runs the javascript frontend.
+A simple ***Clojure*** and Arduino project which consists of a server and a web client and arduino. You can control the states of arduino ports or some in memory values from a web browser.
 
-The frontend is clojurescript generated javascript. It renders a background image and some buttons to control "PORT"s.
+The backend is written in plain clojure which uses ring, compojure to service web requests and jssc to do the serial communication. The backend provides intefaces to switch some "PORT"s. The "PORT" represents an Arduino digital pin. You can set these Arduino pins to high and low voltage though /port/set/<index>?val=1/0 and get pin status by /port/get/<index>. These APIs are used by the entry page which has some buttons to turn on and off these "PORT"s.
+
