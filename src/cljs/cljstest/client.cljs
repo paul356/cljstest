@@ -86,23 +86,23 @@
  (js/alert "no about now"))
 
 (defn render-images [graph]
- [(.drawImage graph 0 0 1443 771 "entry_page.png")
-  (.drawImage graph 630 548 184 109 "entry_icon.png")
-  (.drawImage graph 1165 669 277 102 "about.png")])
+ [(.drawImage graph 0 0 1280 800 "entry_page.png")
+  (.drawImage graph 598 516 87 35 "entry_icon.png")
+  (.drawImage graph 1030 706 241 80 "about.png")])
 
 (defn render-front-buttons [graph images]
  (events/listen (images 1) (.-CLICK events/EventType) (click-enter graph images))
  (events/listen (images 2) (.-CLICK events/EventType) click-about))
 
 (defn front []
- (let [graph (graphics/createGraphics 1443 771)
+ (let [graph (graphics/createGraphics 1282 802)
        div-canvas (dom/getElement "canvas")
        images (render-images graph)]
   (render-front-buttons graph images)
   (.render graph div-canvas)))
 
 (defn main [graph]
- (.drawImage graph 0 0 1440 770 "background.png")
+ (.drawImage graph 0 0 1280 800 "background.png")
  (render-switchs graph)
  (render-buttons))
 

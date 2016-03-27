@@ -1,13 +1,8 @@
 body {
-  width: 900px;
-  margin: 0 auto;
-  background-color: #8eba8e;
+    overflow: hidden;
 }
 
-div {
-  background: green;
-  margin: 3em;
-  padding: 1em;
-  border: 1px solid gray;
-  background-color: #baf0ba;
+div#canvas {
+    margin-left: -8px;
+    margin-top: -8px;
 }
