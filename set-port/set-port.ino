@@ -10,7 +10,7 @@ enum {SET='s', GET='g'};
 // Set is ['s', param_idx, param_val(sizeof(ParamType)]
 // Get is ['g', param_idx]
 
-ParamType params[PARAM_NUM] = {2, 1, 2, 1, 2, 1};
+ParamType params[PARAM_NUM] = {0, 2, 1, 1, 0, 1};
 int sensors[PARAM_NUM] = {37, 40, 41, 38, 18, 19};
 
 const int pulse  [NSTEPPERS] = {26, 4, 56};
@@ -61,6 +61,13 @@ void handleCommand(char cmd, char idx, ParamType val)
         case SET:
             if (idx < PARAM_NUM) {
               params[idx] = val;
+            } else if (idx >= PARAM_NUM && idx < PARAM_NUM + NSTEPPERS) {
+              // Special ports for tuning the gate stepper motors
+              if (val) {
+                openGate(idx - PARAM_NUM, true);
+              } else {
+                openGate(idx - PARAM_NUM, false);
+              }
             }
             // echo the set command
             Serial.write(0);

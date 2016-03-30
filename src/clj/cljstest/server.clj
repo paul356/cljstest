@@ -5,49 +5,45 @@
             [ring.util.response :refer [redirect content-type response]]
             [compojure.core :refer :all]
             [compojure.route :as route]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.string :as string])
   (:import  [jssc SerialPort SerialPortList])
   (:gen-class))
 
-(defonce serial-conn 
- (let [ports (. SerialPortList getPortNames)
-       myport "/dev/tty.usbmodem1421"]
-  (if (and (pos? (alength ports)) (contains? (set ports) myport))
-;   (doto (SerialPort. "/dev/tty.usbserial-A50285BI")
-   (doto (SerialPort. myport)
-    (.openPort)
-    (.setParams 9600 8 1 0)
-    ((fn [_] (Thread/sleep 1000))))
-   nil)))
+(def ^:dynamic *serial-conn*)
 
 (defn set-port [idx val]
- (.writeBytes serial-conn (byte-array [(byte \s) (byte idx) (byte val)]))
- (aget (.readBytes serial-conn 1) 0))
+ (.writeBytes *serial-conn* (byte-array [(byte \s) (byte idx) (byte val)]))
+ (aget (.readBytes *serial-conn* 1) 0))
 
 (defn query-port [idx] 
- (.writeBytes serial-conn (byte-array [(byte \g) (byte idx)]))
- (aget (.readBytes serial-conn 1) 0))
+ (.writeBytes *serial-conn* (byte-array [(byte \g) (byte idx)]))
+ (aget (.readBytes *serial-conn* 1) 0))
 
 (defn close-conn []
- (.closePort serial-conn))
+ (.closePort *serial-conn*))
+
+(defonce num-sensor 6)
 
 (def anchors-str (str 
                   "var anchors = [" 
                   (reduce
                    str
                    (map #(format "[%d,%d,%d]," (:x %) (:y %) (:group %)) 
-                    [{:x 10  :y 10  :group 1} 
-                     {:x 250 :y 250 :group 1} 
-                     {:x 390 :y 10  :group 2} 
-                     {:x 530 :y 230 :group 2}]))
+                    [{:x 617 :y 120 :group 1} 
+                     {:x 617 :y 180 :group 1} 
+                     {:x 499 :y 340 :group 2} 
+                     {:x 416 :y 400 :group 2} 
+                     {:x 734 :y 340 :group 3} 
+                     {:x 817 :y 400 :group 3}]))
                   "];"))
 
-(def images-str "var images = [null, null, null, null];")
+(def images-str (str "var images = [" (string/join "," (repeat num-sensor "null")) "];"))
 
 (defn query-states []
- (if serial-conn
-  (doall (map query-port [0 1 2 3])) 
-  (do (println "serial-conn is nil") [0 0 0 0])))
+ (if *serial-conn*
+  (doall (map query-port (take num-sensor (iterate inc 0)))) 
+  (do (println "serial-conn is nil") (repeat num-sensor 0))))
 
 (defn states-str [] (str
                      "var onoffs = ["
@@ -77,6 +73,20 @@
  (route/resources "/")
  (route/not-found "<h1>Page Not Found</h1>"))
 
+(defn open-port [myport]
+  (alter-var-root #'*serial-conn*
+                  (let [ports (. SerialPortList getPortNames)]
+                    (if (and (pos? (alength ports)) (contains? (set ports) myport))
+                      (doto (SerialPort. myport)
+                        (.openPort)
+                        (.setParams 9600 8 1 0)
+                        ((fn [_] (Thread/sleep 1000))))
+                      nil))))
+
 (defn -main [& args]
- (let [app (wrap-params (wrap-defaults app site-defaults))]
-  (run-jetty {:ring-handler app :port 3000})))
+  (if (> (count args) 0)
+    (do
+      (open-port (first args))
+      (let [app (wrap-params (wrap-defaults app site-defaults))]
+        (run-jetty {:ring-handler app :port 3000})))
+    (println "please provide device name")))
