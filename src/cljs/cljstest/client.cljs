@@ -1,45 +1,48 @@
 (ns cljstest.client
   (:require [goog.events :as events]
             [goog.dom :as dom]
-            [goog.graphics :as graphics])
-  (:import  [goog.ui CustomButton]
-            [goog.net XmlHttp]))
+            [goog.graphics :as graphics]
+            [ajax.core :refer [GET POST]]))
 
 (declare draw-image)
 
-(defn get-port [idx]
- (let [req (XmlHttp.)]
-  (.open req "GET" (str "/port/get/" idx))
-  (.send req)
-  (.-responseText req)))
+(defn get-port [idx callback err-callback]
+  (GET (str "/port/get/" idx) {:handler callback :error-handler err-callback}))
 
-(defn set-port [idx val]
- (let [req (XmlHttp.)]
-  (.open req "GET" (str "/port/set/" idx "?val=" val))
-  (.send req)
-  (.-statusText req)))
+(defn set-port [idx value callback err-callback]
+  (GET (str "/port/set/" idx) {:params {:val value} :handler callback :error-handler err-callback}))
 
 (defn get-anchors [] (js->clj js/anchors))
 
 (defn get-onoffs [idx] (aget js/onoffs idx))
-(defn circle-onoffs [idx]
- (.log js/console (str "circle state of switch-" idx))
- (aset js/onoffs idx (if (= (aget js/onoffs idx) 2) 0 (+ 1 (aget js/onoffs idx))))
- (set-port idx (aget js/onoffs idx)))
+(defn set-onoffs [idx state] (aset js/onoffs idx state))
 
 (defn get-image [idx] (aget js/images idx))
 (defn save-image [idx img] (aset js/images idx img))
 
 (defn handle-click [graph x y idx anchor-group]
- (fn [evt] 
-  (.log js/console (str "click swtich-" idx))
-  (circle-onoffs idx)
-  (.dispose (get-image idx))
-  (draw-image graph x y idx anchor-group)))
+  (fn [evt] 
+    (.log js/console (str "click swtich-" idx))
+    (if (= 3 (get-onoffs idx))
+      (js/alert "处理进行中...")
+      (let [next-state  (if (= (aget js/onoffs idx) 2) 0 (+ 1 (aget js/onoffs idx)))
+            old-state (get-onoffs idx)]
+        (set-onoffs idx 3)
+        (draw-image graph x y idx anchor-group)
+        (set-port idx 
+                  next-state 
+                  (fn [resp]
+                    (set-onoffs idx next-state)
+                    (draw-image graph x y idx anchor-group))
+                  (fn [{:keys [status]}] 
+                    (js/alert "服务器出错啦")
+                    (set-onoffs idx old-state)
+                    (draw-image graph x y idx anchor-group)))))))
 
 (defn draw-image [graph x y idx anchor-group]
  (let [state (get-onoffs idx)
        image (.drawImage graph x y 47 47 (str "sensor_state" state ".png"))]
+  (when-let [old-img (get-image idx)] (.dispose old-img))
   (save-image idx image)
   (events/listen image (.-CLICK events/EventType) (handle-click graph x y idx anchor-group))))
 

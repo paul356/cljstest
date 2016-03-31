@@ -136,12 +136,12 @@ boolean checkSensors(int start)
 
     if (params[start]) {
         if (digitalRead(sensors[start])) {
-            delay(2000);
+            delay(4000);
             param = params[start];
         }
     } else if (params[start+1]) {
         if (digitalRead(sensors[start+1])) {
-            delay(2000);
+            delay(4000);
             param = params[start+1];
         }
     } else {
@@ -181,6 +181,7 @@ void resetSteppers()
         } else if (steppers[i] == RIGHT) {
             openGate(i, false);
         }
+        steppers[i] = DISABLED;
     }
 }
 

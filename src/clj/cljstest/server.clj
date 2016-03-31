@@ -10,7 +10,7 @@
   (:import  [jssc SerialPort SerialPortList])
   (:gen-class))
 
-(def ^:dynamic *serial-conn*)
+(def ^:dynamic *serial-conn* nil)
 
 (defn set-port [idx val]
  (.writeBytes *serial-conn* (byte-array [(byte \s) (byte idx) (byte val)]))
@@ -59,34 +59,34 @@
 ; (reduce str (map replace-tag front-page-templ)))
 
 (defroutes app
- (GET "/" [] (redirect "/index.html"))
- (GET "/js/data.js" [] (content-type (response (get-data)) "application/javascript"))
- (GET "/port/set/:index" [index :as req] 
-  (let [params (:query-params req)]
-   (if (contains? params "val")
-    (str (set-port 
-      (Integer. index)
-      (Integer. (get params "val"))))
-    "need ?val=1/0")))
- (GET "/port/get/:index" [index] 
-  (str (query-port (Integer. index))))
- (route/resources "/")
- (route/not-found "<h1>Page Not Found</h1>"))
+           (GET "/" [] (redirect "/index.html"))
+           (GET "/js/data.js" [] (content-type (response (get-data)) "application/javascript"))
+           (GET "/port/set/:index" [index :as req] 
+                (let [params (:query-params req)]
+                  (if (contains? params "val")
+                    (str (set-port 
+                           (Integer. index)
+                           (Integer. (get params "val"))))
+                    "need ?val=1/0")))
+           (GET "/port/get/:index" [index] 
+                (str (query-port (Integer. index))))
+           (route/resources "/")
+           (route/not-found "<h1>Page Not Found</h1>"))
 
 (defn open-port [myport]
   (alter-var-root #'*serial-conn*
-                  (let [ports (. SerialPortList getPortNames)]
-                    (if (and (pos? (alength ports)) (contains? (set ports) myport))
-                      (doto (SerialPort. myport)
-                        (.openPort)
-                        (.setParams 9600 8 1 0)
-                        ((fn [_] (Thread/sleep 1000))))
-                      nil))))
+                  (fn [_]
+                    (let [ports (. SerialPortList getPortNames)]
+                      (if (and (pos? (alength ports)) (contains? (set ports) myport))
+                        (doto (SerialPort. myport)
+                          (.openPort)
+                          (.setParams 9600 8 1 0)
+                          ((fn [_] (Thread/sleep 1000))))
+                        nil))))
+  (println (str "open port " myport)))
 
 (defn -main [& args]
-  (if (> (count args) 0)
-    (do
-      (open-port (first args))
-      (let [app (wrap-params (wrap-defaults app site-defaults))]
-        (run-jetty {:ring-handler app :port 3000})))
-    (println "please provide device name")))
+  (when (> (count args) 0)
+    (open-port (first args)))
+  (let [app (wrap-params (wrap-defaults app site-defaults))]
+    (run-jetty {:ring-handler app :port 3000})))
