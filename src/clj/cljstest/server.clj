@@ -2,7 +2,7 @@
   (:require [qbits.jet.server :refer [run-jetty]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.params :refer [wrap-params]]
-            [ring.util.response :refer [redirect content-type response]]
+            [ring.util.response :refer [redirect content-type response header]]
             [compojure.core :refer :all]
             [compojure.route :as route]
             [clojure.java.io :as io]
@@ -62,14 +62,24 @@
            (GET "/" [] (redirect "/index.html"))
            (GET "/js/data.js" [] (content-type (response (get-data)) "application/javascript"))
            (GET "/port/set/:index" [index :as req] 
-                (let [params (:query-params req)]
-                  (if (contains? params "val")
-                    (str (set-port 
-                           (Integer. index)
-                           (Integer. (get params "val"))))
-                    "need ?val=1/0")))
+                {:status 200
+                 :headers {"Pragma" "no-cache"
+                           "Cache-Control" "no-cache"
+                           "Expires" "0"
+                           "Content-Type" "text/plain"}
+                 :body (let [params (:query-params req)]
+                         (if (contains? params "val")
+                           (str (set-port 
+                                  (Integer. index)
+                                  (Integer. (get params "val"))))
+                           "need ?val=1/0"))})
            (GET "/port/get/:index" [index] 
-                (str (query-port (Integer. index))))
+                {:status 200
+                 :headers {"Pragma" "no-cache"
+                           "Cache-Control" "no-cache"
+                           "Expires" "0"
+                           "Content-Type" "text/plain"}
+                 :body (str (query-port (Integer. index)))})
            (route/resources "/")
            (route/not-found "<h1>Page Not Found</h1>"))
 
@@ -88,5 +98,5 @@
 (defn -main [& args]
   (when (> (count args) 0)
     (open-port (first args)))
-  (let [app (wrap-params (wrap-defaults app site-defaults))]
+  (let [app (wrap-params (wrap-defaults app site-defaults))] 
     (run-jetty {:ring-handler app :port 3000})))
