@@ -30,12 +30,12 @@
                   (reduce
                    str
                    (map #(format "[%d,%d,%d]," (:x %) (:y %) (:group %)) 
-                    [{:x 617 :y 120 :group 1} 
-                     {:x 617 :y 180 :group 1} 
-                     {:x 499 :y 340 :group 2} 
-                     {:x 416 :y 400 :group 2} 
-                     {:x 734 :y 340 :group 3} 
-                     {:x 817 :y 400 :group 3}]))
+                    [{:x 615 :y 135 :group 1} 
+                     {:x 615 :y 194 :group 1} 
+                     {:x 399 :y 470 :group 2} 
+                     {:x 399 :y 533 :group 2} 
+                     {:x 835 :y 470 :group 3} 
+                     {:x 835 :y 533 :group 3}]))
                   "];"))
 
 (def images-str (str "var images = [" (string/join "," (repeat num-sensor "null")) "];"))
