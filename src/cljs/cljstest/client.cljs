@@ -51,6 +51,15 @@
   (doseq [[x y group idx] anchors]
    (draw-image graph x y idx (filter #(= group (nth % 2)) anchors)))))
 
+(defn main []
+  (let [graph (graphics/createGraphics 1282 802)
+        div-canvas (dom/getElement "canvas")]
+    (.render graph div-canvas)
+    (.drawImage graph 0 0 1280 800 "sensor_page.png")
+    (render-switchs graph)))
+
+(set! (.-onload js/window) main)
+
 ;(defn handle-start [e]
 ; (.log js/console "start button")
 ; (set-port (alength js/anchors) 1))
@@ -95,11 +104,3 @@
 ;  (render-front-buttons graph images)
 ;  (.render graph div-canvas)))
 
-(defn main []
-  (let [graph (graphics/createGraphics 1282 802)
-        div-canvas (dom/getElement "canvas")]
-    (.render graph div-canvas)
-    (.drawImage graph 0 0 1280 800 "sensor_page.png")
-    (render-switchs graph)))
-
-(set! (.-onload js/window) main)

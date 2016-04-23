@@ -1,8 +1,31 @@
 body {
     overflow: hidden;
+    background: black;
 }
 
 div#canvas {
     margin-left: -8px;
     margin-top: -8px;
+}
+
+div.table {
+    display:table;
+    border-collapse:separate;
+    position:fixed;
+    top: 40px;
+    left: 40px;
+    z-index: -1;
+}
+
+div.row {
+    display:table-row;
+}
+
+.row div {
+    display:table-cell;
+    border: 1px solid white;
+    width: 70px;
+    text-align: center;
+    background: black;
+    color: white;
 }
